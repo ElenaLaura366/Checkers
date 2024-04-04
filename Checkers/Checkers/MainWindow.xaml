@@ -5,8 +5,74 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Checkers"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen">
     <Grid>
-        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <TextBlock Grid.Column="1" Text="Checkers" FontSize="60" FontWeight="Bold" TextAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,100,0,0"/>
+        <StackPanel Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Center">
+            <Button Content="PLAY" Width="130" Height="40" x:Name="PlayButton" Margin="0,0,0,20">
+                <Button.Style>
+                    <Style TargetType="{x:Type Button}">
+                        <Setter Property="Background" Value="Black"/>
+                        <Setter Property="Foreground" Value="White"/>
+                        <Setter Property="BorderBrush" Value="Black"/>
+                        <Setter Property="BorderThickness" Value="2"/>
+                        <Setter Property="FontSize" Value="14"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type Button}">
+                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Polygon Grid.Column="0" Points="0,0 20,10 0,20" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                            <TextBlock Grid.Column="1" Text="PLAY" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                        </Grid>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button Content="ABOUT" Width="130" Height="40" x:Name="AboutButton" Margin="0,0,0,100">
+                <Button.Style>
+                    <Style TargetType="{x:Type Button}">
+                        <Setter Property="Background" Value="Black"/>
+                        <Setter Property="Foreground" Value="White"/>
+                        <Setter Property="BorderBrush" Value="Black"/>
+                        <Setter Property="BorderThickness" Value="2"/>
+                        <Setter Property="FontSize" Value="14"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="{x:Type Button}">
+                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Canvas Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="20" Height="20" Margin="10,0,0,0">
+                                                <Path Fill="White" Data="M 10,1.5 L 12,7 L 18,7 L 13,11 L 15,17 L 10,13 L 5,17 L 7,11 L 2,7 L 8,7 Z" />
+                                            </Canvas>
+                                            <TextBlock Grid.Column="1" Text="{TemplateBinding Content}" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
+                                        </Grid>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </Button.Style>
+            </Button>
+        </StackPanel>
     </Grid>
 </Window>
