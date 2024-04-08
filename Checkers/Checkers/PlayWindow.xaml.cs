@@ -10,21 +10,19 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace Checkers
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for PlayWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class PlayWindow : Window
     {
-        public MainWindow()
+        public PlayWindow()
         {
             InitializeComponent();
-            this.DataContext = new MainViewModel();
+            DataContext = new BoardViewModel();
         }
-
     }
 }

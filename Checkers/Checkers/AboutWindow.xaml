@@ -1,0 +1,57 @@
+﻿<Window x:Class="Checkers.AboutWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Checkers"
+        mc:Ignorable="d"
+        Title="AboutWindow" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen">
+    <Window.DataContext>
+        <local:AboutViewModel/>
+    </Window.DataContext>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Button Content="BACK" Command="{Binding BackCommand}" Grid.Column="0" Width="130" Height="40" Name="BackButton" VerticalAlignment="top" Margin="0,10,250,0">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Background" Value="Black"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="BorderBrush" Value="Black"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                    <Setter Property="FontSize" Value="14"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Button.Style>
+        </Button>
+        <StackPanel Grid.Column="0" VerticalAlignment="Top" HorizontalAlignment="Center" Width="300" Margin="0,90,0,0">
+            <TextBlock Text="Nume:" FontSize="30" FontWeight="Bold" TextAlignment="Center" HorizontalAlignment="Center"/>
+            <TextBlock Text="Garcineanu Elena-Laura" FontSize="30" FontWeight="Light" TextAlignment="Center" HorizontalAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Center" Width="300">
+            <TextBlock Text="Email:" FontSize="30" FontWeight="Bold" TextAlignment="Center" HorizontalAlignment="Center"/>
+            <TextBlock Text="exemplu@gmail.com" FontSize="30" FontWeight="Light" TextAlignment="Center" HorizontalAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Grid.Column="0" VerticalAlignment="Bottom" HorizontalAlignment="Center" Width="300" Margin="0,0,0,90">
+            <TextBlock Text="Grupa:" FontSize="30" FontWeight="Bold" TextAlignment="Center" HorizontalAlignment="Center"/>
+            <TextBlock Text="10LF222" FontSize="30" FontWeight="Light" TextAlignment="Center"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Width="300">
+            <TextBlock Text="Descrierea Jocului" FontSize="30" FontWeight="Bold" TextAlignment="Center" HorizontalAlignment="Center"/>
+            <TextBlock Text="Jocul de dame este un joc strategic pentru doi jucatori, care se desfasoara pe o tabla cu 64 de patrate, organizata in 8x8. Fiecare jucator incepe cu 12 piese plasate pe patratele inchise la culoare din primele trei randuri. Scopul este de a captura toate piesele adversarului sau de a le bloca astfel incat acestea sa nu mai poata fi mutate. Piesele se muta in diagonala, cate un patrat o data. Daca o piesa a adversarului poate fi sarita peste, aceasta este capturata si eliminata de pe tabla. Piesele obisnuite se muta doar inainte, dar cand ajung in ultimul rand, fata de jucator, sunt incoronate ca regi si pot sa se mute atat inainte cat si inapoi. Jocul se termina cand un jucator nu mai are mutari legale, fie prin pierderea tuturor pieselor, fie prin blocarea completa." 
+                       FontSize="13" FontWeight="Light" TextAlignment="Center" TextWrapping="Wrap"/>
+        </StackPanel>
+    </Grid>
+</Window>

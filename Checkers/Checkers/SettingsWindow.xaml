@@ -1,24 +1,23 @@
-﻿<Window x:Class="Checkers.MainWindow"
+﻿<Window x:Class="Checkers.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Checkers"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
+        Title="SettingsWindow" Height="450" Width="800"
         WindowStartupLocation="CenterScreen">
-    <Window.DataContext>
-        <local:MainViewModel/>
-    </Window.DataContext>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
-        <TextBlock Grid.Column="1" Text="Checkers" FontSize="60" FontWeight="Bold" TextAlignment="Center" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,100,0,0"/>
-        <StackPanel Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Center">
-            <Button Content="PLAY" Command="{Binding SettingsCommand}" Width="130" Height="40" x:Name="PlayButton" Margin="0,0,0,20">
+        <StackPanel Grid.Column="1">
+            <TextBlock Text="New Game Settings" FontSize="30" FontWeight="Bold" TextAlignment="Center" HorizontalAlignment="Center" TextWrapping="Wrap" Margin="0,100,0,0"/>
+        </StackPanel>
+        <StackPanel Grid.Column="1" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,50">
+            <Button Content="Open Game" Command="{Binding OpenCommand}" Width="130" Height="40" x:Name="GameButton" Margin="0,0,0,10">
                 <Button.Style>
                     <Style TargetType="{x:Type Button}">
                         <Setter Property="Background" Value="Black"/>
@@ -31,14 +30,7 @@
                             <Setter.Value>
                                 <ControlTemplate TargetType="{x:Type Button}">
                                     <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Polygon Grid.Column="0" Points="0,0 20,10 0,20" Fill="White" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0,0,0"/>
-                                            <TextBlock Grid.Column="1" Text="PLAY" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
-                                        </Grid>
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                 </ControlTemplate>
                             </Setter.Value>
@@ -46,7 +38,9 @@
                     </Style>
                 </Button.Style>
             </Button>
-            <Button Content="ABOUT" Command="{Binding AboutCommand}" Width="130" Height="40" x:Name="AboutButton" Margin="0,0,0,100">
+            <CheckBox Name="multipleJump" Content="Allow Multiple Jump" FontSize="16" Margin="0,5" VerticalContentAlignment="Center" IsChecked="{Binding IsPhrase, Mode=TwoWay}"/>
+            <CheckBox Name="Statistics" Content="Statistics" FontSize="16" Margin="0,5" VerticalContentAlignment="Center" IsChecked="{Binding IsPhrase, Mode=TwoWay}"/>
+            <Button Content="Play" Command="{Binding PlayCommand}" Width="130" Height="40" x:Name="PlayButton" Margin="0,10,0,0">
                 <Button.Style>
                     <Style TargetType="{x:Type Button}">
                         <Setter Property="Background" Value="Black"/>
@@ -59,16 +53,7 @@
                             <Setter.Value>
                                 <ControlTemplate TargetType="{x:Type Button}">
                                     <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <Canvas Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" Width="20" Height="20" Margin="10,0,0,0">
-                                                <Path Fill="White" Data="M 10,1.5 L 12,7 L 18,7 L 13,11 L 15,17 L 10,13 L 5,17 L 7,11 L 2,7 L 8,7 Z" />
-                                            </Canvas>
-                                            <TextBlock Grid.Column="1" Text="{TemplateBinding Content}" Foreground="White" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" Margin="5,0,0,0"/>
-                                        </Grid>
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                 </ControlTemplate>
                             </Setter.Value>
