@@ -15,10 +15,10 @@ namespace Checkers
         {
             if (value is bool && (bool)value)
             {
-                return new Thickness(4); // Setează grosimea bordurii când este true
+                return new Thickness(4);
             }
 
-            return new Thickness(0); // Fără bordură când este false
+            return new Thickness(0);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

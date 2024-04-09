@@ -23,15 +23,15 @@ namespace Checkers
                     case CheckerColor.Red:
                         return Brushes.Red;
                     default:
-                        return DependencyProperty.UnsetValue; // Invalid color
+                        return DependencyProperty.UnsetValue;
                 }
             }
-            return DependencyProperty.UnsetValue; // Invalid input
+            return DependencyProperty.UnsetValue;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotSupportedException(); // This converter only converts one way
+            throw new NotSupportedException();
         }
     }
 }

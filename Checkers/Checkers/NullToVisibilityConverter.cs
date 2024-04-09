@@ -18,7 +18,7 @@ namespace Checkers
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            throw new NotSupportedException(); // This converter only converts one way
+            throw new NotSupportedException();
         }
     }
 }

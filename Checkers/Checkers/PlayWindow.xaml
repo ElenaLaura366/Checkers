@@ -39,11 +39,9 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="{Binding IsWhiteSquare, Converter={StaticResource BoolToColorConverter}}"
-            BorderBrush="Gold" BorderThickness="{Binding IsHighlighted, Converter={StaticResource BooleanToThicknessConverter}}">
+                    <Border Background="{Binding IsWhiteSquare, Converter={StaticResource BoolToColorConverter}}" BorderBrush="Gold" BorderThickness="{Binding IsHighlighted, Converter={StaticResource BooleanToThicknessConverter}}" MouseDown="Border_MouseDown">
                         <Ellipse Fill="{Binding Checker.Color, Converter={StaticResource CheckerColorToBrushConverter}}" 
-                         Visibility="{Binding Checker, Converter={StaticResource NullToVisibilityConverter}}"
-                         MouseDown="Ellipse_MouseDown"/>
+                         Visibility="{Binding Checker, Converter={StaticResource NullToVisibilityConverter}}"/>
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

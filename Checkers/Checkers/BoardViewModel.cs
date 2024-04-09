@@ -58,7 +58,12 @@ namespace Checkers
                 MoveChecker(selectedSquare, square);
                 ClearSelections();
             }
-            else
+            else if (selectedSquare != null && square.IsHighlighted)
+            {
+                MoveChecker(selectedSquare, square);
+                ClearSelections();
+            }
+            else if (square.Checker != null) // Dacă patratelul selectat conține o dama
             {
                 ClearSelections();
                 selectedSquare = square;
@@ -66,19 +71,21 @@ namespace Checkers
                 HighlightPossibleMoves(square);
             }
         }
-        private void HighlightPossibleMoves(BoardSquare square)
+
+        public void HighlightPossibleMoves(BoardSquare square)
         {
+            ClearSelections();
             var possibleMoves = CalculatePossibleMoves(square);
             foreach (var move in possibleMoves)
             {
-                move.IsHighlighted = true;  // Presupunem că există o proprietate IsHighlighted în BoardSquare
+                move.IsHighlighted = true;
             }
         }
 
         private List<BoardSquare> CalculatePossibleMoves(BoardSquare square)
         {
             var moves = new List<BoardSquare>();
-            int[] directionRow = { 1, -1 }; // Piesele obișnuite se pot mișca doar înainte, regele în ambele direcții
+            int[] directionRow = { 1, -1 };
             int[] directionCol = { -1, 1 };
 
             foreach (var rowDir in directionRow)
@@ -94,7 +101,6 @@ namespace Checkers
                         {
                             moves.Add(targetSquare);
                         }
-                        // Adăugați logica pentru capturarea pieselor adversare
                     }
                 }
             }
@@ -107,7 +113,7 @@ namespace Checkers
             foreach (var square in Squares)
             {
                 square.IsSelected = false;
-                square.IsHighlighted = false;  // Resetează evidențierea
+                square.IsHighlighted = false;
             }
         }
 
@@ -136,7 +142,6 @@ namespace Checkers
                 destinationSquare.Checker = selectedCheckerSquare.Checker;
                 selectedCheckerSquare.Checker = null;
                 UpdatePiecesCount();
-                // Adăugați orice altă logică necesară după mișcare
             }
         }
 
@@ -147,10 +152,36 @@ namespace Checkers
             int rowDiff = toSquare.Row - fromSquare.Row;
             int colDiff = Math.Abs(toSquare.Column - fromSquare.Column);
 
-            // Pentru piesele obișnuite, permite mutarea doar înainte (sau înapoi pentru rege)
-            return colDiff == 1 && ((fromSquare.Checker.IsKing && Math.Abs(rowDiff) == 1) ||
-                                    (fromSquare.Checker.Color == CheckerColor.White && rowDiff == -1) ||
-                                    (fromSquare.Checker.Color == CheckerColor.Red && rowDiff == 1));
+            if (!fromSquare.Checker.IsKing) // Dacă piesa nu este regină
+            {
+                if (fromSquare.Checker.Color == CheckerColor.White)
+                {
+                    // Piesele albe pot merge doar înainte
+                    if (rowDiff == -1 && colDiff == 1)
+                        return true;
+                }
+                else if (fromSquare.Checker.Color == CheckerColor.Red)
+                {
+                    // Piesele roșii pot merge doar înainte
+                    if (rowDiff == 1 && colDiff == 1)
+                        return true;
+                }
+
+                // Verificare dacă piesa a ajuns la capătul opus al tablei și o transformăm în regină
+                if ((fromSquare.Checker.Color == CheckerColor.White && toSquare.Row == 0) ||
+                    (fromSquare.Checker.Color == CheckerColor.Red && toSquare.Row == 7))
+                {
+                    fromSquare.Checker.IsKing = true;
+                    return true;
+                }
+            }
+            else // Dacă piesa este regină
+            {
+                // Regii pot merge în orice direcție cu o singură casetă
+                if (colDiff == 1 && Math.Abs(rowDiff) == 1)
+                    return true;
+            }
+            return false;
         }
 
         private void SetupBoard()
@@ -160,9 +191,13 @@ namespace Checkers
                 for (int column = 0; column < 8; column++)
                 {
                     var isWhiteSquare = (row + column) % 2 == 0;
-                    var checker = (row < 3 && !isWhiteSquare) ? new Checker { Color = CheckerColor.White } :
-                                  (row > 4 && !isWhiteSquare) ? new Checker { Color = CheckerColor.Red } :
-                                  null;
+                    Checker checker = null;
+
+                    // La crearea tablei, toate piesele sunt regi
+                    if ((row < 3 && !isWhiteSquare) || (row > 4 && !isWhiteSquare))
+                    {
+                        checker = new Checker { Color = row < 3 ? CheckerColor.White : CheckerColor.Red, IsKing = true };
+                    }
 
                     var square = new BoardSquare(new RelayCommand(param => HandleSquareSelected(param as BoardSquare)))
                     {

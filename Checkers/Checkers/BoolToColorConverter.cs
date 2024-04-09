@@ -13,7 +13,6 @@ namespace Checkers
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            // Assuming false is for white squares and true is for brown squares
             return (bool)value ? Brushes.BurlyWood : Brushes.Wheat;
         }
 
