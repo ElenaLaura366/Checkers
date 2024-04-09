@@ -15,6 +15,36 @@ namespace Checkers
         public int Row { get; set; }
         public int Column { get; set; }
         public ICommand SquareClickCommand { get; set; }
+        private bool isSelected;
+        public bool IsSelected
+        {
+            get => isSelected;
+            set
+            {
+                if (isSelected != value)
+                {
+                    isSelected = value;
+                    OnPropertyChanged(nameof(IsSelected));
+                }
+            }
+        }
+        private bool isHighlighted;
+        public bool IsHighlighted
+        {
+            get => isHighlighted;
+            set
+            {
+                if (isHighlighted != value)
+                {
+                    isHighlighted = value;
+                    OnPropertyChanged(nameof(IsHighlighted));
+                }
+            }
+        }
+        public BoardSquare(ICommand clickCommand)
+        {
+            SquareClickCommand = clickCommand ?? throw new ArgumentNullException(nameof(clickCommand));
+        }
 
         public Checker Checker
         {

@@ -24,5 +24,20 @@ namespace Checkers
             InitializeComponent();
             DataContext = new BoardViewModel();
         }
+        private void Ellipse_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var ellipse = sender as Ellipse;
+            if (ellipse != null)
+            {
+                // Obțineți patratul asociat elipsei
+                var square = ellipse.DataContext as BoardSquare;
+                if (square != null)
+                {
+                    // Apelati metoda HandleSquareSelected din BoardViewModel
+                    (DataContext as BoardViewModel)?.HandleSquareSelected(square);
+                }
+            }
+        }
+
     }
 }
