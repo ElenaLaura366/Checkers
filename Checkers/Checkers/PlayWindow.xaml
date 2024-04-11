@@ -7,14 +7,12 @@
         mc:Ignorable="d"
         Title="PlayWindow" Height="800" Width="900"
         WindowStartupLocation="CenterScreen">
-    <Window.DataContext>
-        <local:BoardViewModel/>
-    </Window.DataContext>
     <Window.Resources>
         <local:BoolToColorConverter x:Key="BoolToColorConverter"/>
         <local:CheckerColorToBrushConverter x:Key="CheckerColorToBrushConverter"/>
         <local:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <local:BooleanToThicknessConverter x:Key="BooleanToThicknessConverter"/>
+        <local:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
     <Grid Background="#064700">
         <Grid.ColumnDefinitions>
@@ -27,8 +25,11 @@
             <RowDefinition Height="7*"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <StackPanel Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding ActivePlayer}" FontSize="30" Foreground="{Binding ActivePlayer, Converter={StaticResource CheckerColorToBrushConverter}}" Margin="10"/>
+        </StackPanel>
         <StackPanel Grid.Column="2" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
-            <TextBlock Text="{Binding WhitePiecesCount}"  FontSize="30" Foreground="White"/>
+            <TextBlock Text="{Binding WhitePiecesCount}" FontSize="30" Foreground="White"/>
             <TextBlock Text="{Binding RedPiecesCount}" FontSize="30" Foreground="Red"/>
         </StackPanel>
         <ItemsControl Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Squares}">
@@ -39,9 +40,10 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="{Binding IsWhiteSquare, Converter={StaticResource BoolToColorConverter}}" BorderBrush="Gold" BorderThickness="{Binding IsHighlighted, Converter={StaticResource BooleanToThicknessConverter}}" MouseDown="Border_MouseDown">
-                        <Ellipse Fill="{Binding Checker.Color, Converter={StaticResource CheckerColorToBrushConverter}}" 
-                         Visibility="{Binding Checker, Converter={StaticResource NullToVisibilityConverter}}"/>
+                    <Border Background="{Binding IsWhiteSquare, Converter={StaticResource BoolToColorConverter}}"
+            BorderBrush="Gold" BorderThickness="{Binding IsHighlighted, Converter={StaticResource BooleanToThicknessConverter}}"
+            MouseDown="Border_MouseDown">
+                        <Ellipse Fill="{Binding Checker, Converter={StaticResource CheckerColorToBrushConverter}}" Visibility="{Binding Checker, Converter={StaticResource NullToVisibilityConverter}}"/>
                     </Border>
                 </DataTemplate>
             </ItemsControl.ItemTemplate>

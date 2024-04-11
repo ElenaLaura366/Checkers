@@ -14,16 +14,23 @@ namespace Checkers
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is CheckerColor checkerColor)
+            if (value is Checker checker)
             {
-                switch (checkerColor)
+                if (checker.IsKing)
                 {
-                    case CheckerColor.White:
-                        return Brushes.White;
-                    case CheckerColor.Red:
-                        return Brushes.Red;
-                    default:
-                        return DependencyProperty.UnsetValue;
+                    return checker.Color == CheckerColor.White ? Brushes.Black : Brushes.Green;
+                }
+                else
+                {
+                    switch (checker.Color)
+                    {
+                        case CheckerColor.White:
+                            return Brushes.White;
+                        case CheckerColor.Red:
+                            return Brushes.Red;
+                        default:
+                            return DependencyProperty.UnsetValue;
+                    }
                 }
             }
             return DependencyProperty.UnsetValue;

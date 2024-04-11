@@ -63,6 +63,7 @@
     <Compile Include="BoardSquare.cs" />
     <Compile Include="BoardViewModel.cs" />
     <Compile Include="BooleanToThicknessConverter.cs" />
+    <Compile Include="BooleanToVisibilityConverter.cs" />
     <Compile Include="BoolToColorConverter.cs" />
     <Compile Include="Checker.cs" />
     <Compile Include="CheckerColorToBrushConverter.cs" />

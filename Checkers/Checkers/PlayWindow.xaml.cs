@@ -14,15 +14,14 @@ using System.Windows.Shapes;
 
 namespace Checkers
 {
-    /// <summary>
-    /// Interaction logic for PlayWindow.xaml
-    /// </summary>
     public partial class PlayWindow : Window
     {
-        public PlayWindow()
+        private readonly BoardViewModel boardViewModel;
+        public PlayWindow(bool allowMultipleJumps)
         {
             InitializeComponent();
-            DataContext = new BoardViewModel();
+            boardViewModel = new BoardViewModel(allowMultipleJumps);
+            DataContext = boardViewModel;
         }
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)
         {

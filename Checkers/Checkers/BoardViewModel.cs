@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Shapes;
 
@@ -17,6 +18,21 @@ namespace Checkers
         private int whitePiecesCount;
         private int redPiecesCount;
         private BoardSquare selectedSquare;
+        public bool AllowMultipleJumps { get; }
+        public CheckerColor ActivePlayer
+        {
+            get => activePlayer;
+            set
+            {
+                if (activePlayer != value)
+                {
+                    activePlayer = value;
+                    OnPropertyChanged(nameof(ActivePlayer));
+                }
+            }
+        }
+        private CheckerColor activePlayer;
+
         public int WhitePiecesCount
         {
             get => whitePiecesCount;
@@ -37,12 +53,14 @@ namespace Checkers
             }
         }
 
-        public BoardViewModel()
+        public BoardViewModel(bool allowMultipleJumps)
         {
+            AllowMultipleJumps = allowMultipleJumps;
             Squares = new ObservableCollection<BoardSquare>();
             SetupBoard();
             UpdatePiecesCount();
             InitializeCommands();
+            ActivePlayer = CheckerColor.Red;
         }
 
         private void UpdatePiecesCount()
@@ -53,22 +71,30 @@ namespace Checkers
 
         public void HandleSquareSelected(BoardSquare square)
         {
-            if (selectedSquare != null && IsValidMove(selectedSquare, square))
+            if (square.Checker?.Color == ActivePlayer)
+            {
+                if (selectedSquare != null && IsValidMove(selectedSquare, square))
+                {
+                    MoveChecker(selectedSquare, square);
+                    ClearSelections();
+                }
+                else if (selectedSquare != null && square.IsHighlighted)
+                {
+                    MoveChecker(selectedSquare, square);
+                    ClearSelections();
+                }
+                else if (square.Checker != null)
+                {
+                    ClearSelections();
+                    selectedSquare = square;
+                    square.IsSelected = true;
+                    HighlightPossibleMoves(square);
+                }
+            }
+            else if (square.IsHighlighted && selectedSquare != null)
             {
                 MoveChecker(selectedSquare, square);
                 ClearSelections();
-            }
-            else if (selectedSquare != null && square.IsHighlighted)
-            {
-                MoveChecker(selectedSquare, square);
-                ClearSelections();
-            }
-            else if (square.Checker != null) // Dacă patratelul selectat conține o dama
-            {
-                ClearSelections();
-                selectedSquare = square;
-                square.IsSelected = true;
-                HighlightPossibleMoves(square);
             }
         }
 
@@ -81,33 +107,62 @@ namespace Checkers
                 move.IsHighlighted = true;
             }
         }
+        private IEnumerable<(int Row, int Column)> GetMoveDirections(Checker checker)
+        {
+            if (checker == null) yield break;
 
+            if (checker.Color == CheckerColor.Red || checker.IsKing)
+            {
+                yield return (-1, -1); // sus-stânga pentru roșu sau rege
+                yield return (-1, 1);  // sus-dreapta pentru roșu sau rege
+            }
+
+            if (checker.Color == CheckerColor.White || checker.IsKing)
+            {
+                yield return (1, -1);  // jos-stânga pentru alb sau rege
+                yield return (1, 1);   // jos-dreapta pentru alb sau rege
+            }
+        }
+        private BoardSquare GetSquare(int row, int column)
+        {
+            if (row >= 0 && row < 8 && column >= 0 && column < 8)
+            {
+                return Squares.FirstOrDefault(s => s.Row == row && s.Column == column);
+            }
+            return null;
+        }
+        private void CheckForPromotion(BoardSquare square)
+        {
+            if (square.Checker != null &&
+                ((square.Row == 7 && square.Checker.Color == CheckerColor.White) ||
+                 (square.Row == 0 && square.Checker.Color == CheckerColor.Red)))
+            {
+                square.Checker.IsKing = true;  // Aceasta ar trebui să declanșeze notificarea
+            }
+        }
         private List<BoardSquare> CalculatePossibleMoves(BoardSquare square)
         {
             var moves = new List<BoardSquare>();
-            int[] directionRow = { 1, -1 };
-            int[] directionCol = { -1, 1 };
+            var directions = GetMoveDirections(square.Checker);
 
-            foreach (var rowDir in directionRow)
+            foreach (var direction in directions)
             {
-                foreach (var colDir in directionCol)
+                BoardSquare targetSquare = GetSquare(square.Row + direction.Row, square.Column + direction.Column);
+                if (targetSquare != null && targetSquare.Checker == null)
                 {
-                    int newRow = square.Row + rowDir;
-                    int newCol = square.Column + colDir;
-                    if (newRow >= 0 && newRow < 8 && newCol >= 0 && newCol < 8)
-                    {
-                        var targetSquare = Squares.FirstOrDefault(s => s.Row == newRow && s.Column == newCol);
-                        if (targetSquare != null && targetSquare.Checker == null)
-                        {
-                            moves.Add(targetSquare);
-                        }
-                    }
+                    moves.Add(targetSquare);
+                }
+
+                BoardSquare jumpSquare = GetSquare(square.Row + 2 * direction.Row, square.Column + 2 * direction.Column);
+                BoardSquare overSquare = GetSquare(square.Row + direction.Row, square.Column + direction.Column);
+                if (jumpSquare != null && overSquare != null && overSquare.Checker != null && overSquare.Checker.Color != square.Checker.Color && jumpSquare.Checker == null)
+                {
+                    moves.Add(jumpSquare);
                 }
             }
 
             return moves;
         }
-
         private void ClearSelections()
         {
             foreach (var square in Squares)
@@ -116,14 +171,36 @@ namespace Checkers
                 square.IsHighlighted = false;
             }
         }
+        private void PerformCapture(BoardSquare fromSquare, BoardSquare toSquare)
+        {
+            int middleRow = (fromSquare.Row + toSquare.Row) / 2;
+            int middleColumn = (fromSquare.Column + toSquare.Column) / 2;
+            BoardSquare capturedSquare = Squares.FirstOrDefault(s => s.Row == middleRow && s.Column == middleColumn);
 
+            if (capturedSquare != null)
+            {
+                capturedSquare.Checker = null;
+            }
+        }
         private void MoveChecker(BoardSquare fromSquare, BoardSquare toSquare)
         {
             toSquare.Checker = fromSquare.Checker;
             fromSquare.Checker = null;
 
+            int rowDiff = toSquare.Row - fromSquare.Row;
+
+            if (Math.Abs(rowDiff) == 2)
+            {
+                PerformCapture(fromSquare, toSquare);
+            }
+            CheckForPromotion(toSquare);
+            ActivePlayer = ActivePlayer == CheckerColor.Red ? CheckerColor.White : CheckerColor.Red;
             UpdatePiecesCount();
-            ClearSelections();
+            var winner = CheckForWinner();
+            if (winner != null)
+            {
+                EndGame(winner.Value);
+            }
         }
 
         private void InitializeCommands()
@@ -143,6 +220,7 @@ namespace Checkers
                 selectedCheckerSquare.Checker = null;
                 UpdatePiecesCount();
             }
+
         }
 
         private bool IsValidMove(BoardSquare fromSquare, BoardSquare toSquare)
@@ -152,36 +230,11 @@ namespace Checkers
             int rowDiff = toSquare.Row - fromSquare.Row;
             int colDiff = Math.Abs(toSquare.Column - fromSquare.Column);
 
-            if (!fromSquare.Checker.IsKing) // Dacă piesa nu este regină
-            {
-                if (fromSquare.Checker.Color == CheckerColor.White)
-                {
-                    // Piesele albe pot merge doar înainte
-                    if (rowDiff == -1 && colDiff == 1)
-                        return true;
-                }
-                else if (fromSquare.Checker.Color == CheckerColor.Red)
-                {
-                    // Piesele roșii pot merge doar înainte
-                    if (rowDiff == 1 && colDiff == 1)
-                        return true;
-                }
+            bool isKing = fromSquare.Checker.IsKing;
+            bool isForwardMove = (fromSquare.Checker.Color == CheckerColor.White && rowDiff == -1) ||
+                                 (fromSquare.Checker.Color == CheckerColor.Red && rowDiff == 1);
 
-                // Verificare dacă piesa a ajuns la capătul opus al tablei și o transformăm în regină
-                if ((fromSquare.Checker.Color == CheckerColor.White && toSquare.Row == 0) ||
-                    (fromSquare.Checker.Color == CheckerColor.Red && toSquare.Row == 7))
-                {
-                    fromSquare.Checker.IsKing = true;
-                    return true;
-                }
-            }
-            else // Dacă piesa este regină
-            {
-                // Regii pot merge în orice direcție cu o singură casetă
-                if (colDiff == 1 && Math.Abs(rowDiff) == 1)
-                    return true;
-            }
-            return false;
+            return colDiff == 1 && (isForwardMove || (isKing && Math.Abs(rowDiff) == 1));
         }
 
         private void SetupBoard()
@@ -191,13 +244,9 @@ namespace Checkers
                 for (int column = 0; column < 8; column++)
                 {
                     var isWhiteSquare = (row + column) % 2 == 0;
-                    Checker checker = null;
-
-                    // La crearea tablei, toate piesele sunt regi
-                    if ((row < 3 && !isWhiteSquare) || (row > 4 && !isWhiteSquare))
-                    {
-                        checker = new Checker { Color = row < 3 ? CheckerColor.White : CheckerColor.Red, IsKing = true };
-                    }
+                    var checker = (row < 3 && !isWhiteSquare) ? new Checker { Color = CheckerColor.White } :
+                                  (row > 4 && !isWhiteSquare) ? new Checker { Color = CheckerColor.Red } :
+                                  null;
 
                     var square = new BoardSquare(new RelayCommand(param => HandleSquareSelected(param as BoardSquare)))
                     {
@@ -211,6 +260,47 @@ namespace Checkers
                 }
             }
         }
+
+        public CheckerColor? CheckForWinner()
+        {
+            if (WhitePiecesCount == 0 || !HasValidMoves(CheckerColor.White))
+            {
+                return CheckerColor.Red;
+            }
+            if (RedPiecesCount == 0 || !HasValidMoves(CheckerColor.Red))
+            {
+                return CheckerColor.White;
+            }
+
+            return null; // Jocul continuă
+        }
+
+        private bool HasValidMoves(CheckerColor playerColor)
+        {
+            foreach (var square in Squares.Where(s => s.Checker?.Color == playerColor))
+            {
+                if (CalculatePossibleMoves(square).Any())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void EndGame(CheckerColor winner)
+        {
+            MessageBox.Show($"{winner} wins the game!");
+            var mainWindow = new MainWindow();
+            mainWindow.Show();
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is PlayWindow)
+                {
+                    window.Close();
+                }
+            }
+        }
+
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)

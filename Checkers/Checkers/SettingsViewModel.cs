@@ -18,6 +18,20 @@ namespace Checkers
         }
         public ICommand PlayCommand { get; }
         public ICommand OpenCommand { get; }
+        private bool allowMultipleJumps;
+
+        public bool AllowMultipleJumps
+        {
+            get => allowMultipleJumps;
+            set
+            {
+                if (allowMultipleJumps != value)
+                {
+                    allowMultipleJumps = value;
+                    OnPropertyChanged(nameof(AllowMultipleJumps));
+                }
+            }
+        }
 
         public SettingsViewModel()
         {
@@ -38,7 +52,7 @@ namespace Checkers
 
         void play()
         {
-            var playWindow = new PlayWindow();
+            var playWindow = new PlayWindow(AllowMultipleJumps);
             playWindow.Show();
             CloseWindow();
         }

@@ -38,7 +38,7 @@
                     </Style>
                 </Button.Style>
             </Button>
-            <CheckBox Name="multipleJump" Content="Allow Multiple Jump" FontSize="16" Margin="0,5" VerticalContentAlignment="Center" IsChecked="{Binding IsPhrase, Mode=TwoWay}"/>
+            <CheckBox Name="multipleJump" Content="Allow Multiple Jump" FontSize="16" Margin="0,5" VerticalContentAlignment="Center" IsChecked="{Binding AllowMultipleJumps, Mode=TwoWay}"/>
             <CheckBox Name="Statistics" Content="Statistics" FontSize="16" Margin="0,5" VerticalContentAlignment="Center" IsChecked="{Binding IsPhrase, Mode=TwoWay}"/>
             <Button Content="Play" Command="{Binding PlayCommand}" Width="130" Height="40" x:Name="PlayButton" Margin="0,10,0,0">
                 <Button.Style>
