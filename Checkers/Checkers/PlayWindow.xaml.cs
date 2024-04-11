@@ -17,10 +17,10 @@ namespace Checkers
     public partial class PlayWindow : Window
     {
         private readonly BoardViewModel boardViewModel;
-        public PlayWindow(bool allowMultipleJumps)
+        public PlayWindow(bool allowMultipleJumps, SettingsViewModel settingsViewModel)
         {
             InitializeComponent();
-            boardViewModel = new BoardViewModel(allowMultipleJumps);
+            boardViewModel = new BoardViewModel(allowMultipleJumps, settingsViewModel);
             DataContext = boardViewModel;
         }
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)

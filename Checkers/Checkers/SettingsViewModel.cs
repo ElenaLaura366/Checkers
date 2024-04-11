@@ -19,7 +19,6 @@ namespace Checkers
         public ICommand PlayCommand { get; }
         public ICommand OpenCommand { get; }
         private bool allowMultipleJumps;
-
         public bool AllowMultipleJumps
         {
             get => allowMultipleJumps;
@@ -29,6 +28,19 @@ namespace Checkers
                 {
                     allowMultipleJumps = value;
                     OnPropertyChanged(nameof(AllowMultipleJumps));
+                }
+            }
+        }
+        private bool showStatistics;
+        public bool ShowStatistics
+        {
+            get => showStatistics;
+            set
+            {
+                if (showStatistics != value)
+                {
+                    showStatistics = value;
+                    OnPropertyChanged(nameof(ShowStatistics));
                 }
             }
         }
@@ -52,7 +64,7 @@ namespace Checkers
 
         void play()
         {
-            var playWindow = new PlayWindow(AllowMultipleJumps);
+            var playWindow = new PlayWindow(AllowMultipleJumps, this);  // `this` referă la instanța curentă a `SettingsViewModel`
             playWindow.Show();
             CloseWindow();
         }

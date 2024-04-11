@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +20,9 @@ namespace Checkers
         private int redPiecesCount;
         private BoardSquare selectedSquare;
         public bool AllowMultipleJumps { get; }
+        private SettingsViewModel settingsViewModel;
         private bool isMultipleJumpInProgress;
+        private const string statsFilePath = "game_stats.txt";
 
         public CheckerColor ActivePlayer
         {
@@ -55,9 +58,10 @@ namespace Checkers
             }
         }
 
-        public BoardViewModel(bool allowMultipleJumps)
+        public BoardViewModel(bool allowMultipleJumps, SettingsViewModel settings)
         {
             AllowMultipleJumps = allowMultipleJumps;
+            this.settingsViewModel = settings;
             Squares = new ObservableCollection<BoardSquare>();
             SetupBoard();
             UpdatePiecesCount();
@@ -185,6 +189,7 @@ namespace Checkers
                  (square.Row == 0 && square.Checker.Color == CheckerColor.Red)))
             {
                 square.Checker.IsKing = true;  // Aceasta ar trebui să declanșeze notificarea
+                OnPropertyChanged(nameof(Squares));
             }
         }
         private List<BoardSquare> CalculatePossibleMoves(BoardSquare square)
@@ -260,6 +265,7 @@ namespace Checkers
             else
             {
                 // Pentru mișcările normale, schimbă jucătorul activ
+                CheckForPromotion(toSquare);
                 ActivePlayer = ActivePlayer == CheckerColor.Red ? CheckerColor.White : CheckerColor.Red;
                 isMultipleJumpInProgress = false;
                 selectedSquare = null;
@@ -355,10 +361,25 @@ namespace Checkers
             }
             return false;
         }
+        private int CalculateRemainingPieces()
+        {
+            return Squares.Count(square => square.Checker != null);
+        }
 
         private void EndGame(CheckerColor winner)
         {
-            MessageBox.Show($"{winner} wins the game!");
+            int remainingPieces = CalculateRemainingPieces();
+            UpdateStatsFile(winner, remainingPieces);
+            if (settingsViewModel.ShowStatistics)  // Asigură-te că ai acces la instanța corectă a SettingsViewModel
+            {
+                var stats = GetGameStats();
+                var message = $"{winner} wins the game!\n\nStatistics:\nWhite Wins: {stats.WhiteWins}\nRed Wins: {stats.RedWins}\nPieces Left for last winner: {stats.LastWinnerPiecesLeft}";
+                MessageBox.Show(message);
+            }
+            else
+            {
+                MessageBox.Show($"{winner} wins the game!");
+            }
             var mainWindow = new MainWindow();
             mainWindow.Show();
             foreach (Window window in Application.Current.Windows)
@@ -368,6 +389,61 @@ namespace Checkers
                     window.Close();
                 }
             }
+        }
+        private void UpdateStatsFile(CheckerColor winner, int remainingPieces)
+        {
+            int whiteWins = 0;
+            int redWins = 0;
+            // Nu mai avem nevoie de maxPiecesLeft pentru a stoca maximul global
+
+            // Citirea datelor existente
+            if (File.Exists(statsFilePath))
+            {
+                var lines = File.ReadAllLines(statsFilePath);
+                if (lines.Length >= 2)
+                {
+                    int.TryParse(lines[0], out whiteWins);
+                    int.TryParse(lines[1], out redWins);
+                    // Nu mai citim maxPiecesLeft
+                }
+            }
+
+            // Actualizarea statisticii
+            if (winner == CheckerColor.White)
+            {
+                whiteWins++;
+            }
+            else if (winner == CheckerColor.Red)
+            {
+                redWins++;
+            }
+
+            // Scrierea datelor actuale, inclusiv numărul de piese rămase pentru câștigătorul acestui joc
+            File.WriteAllLines(statsFilePath, new[]
+            {
+                whiteWins.ToString(),
+                redWins.ToString(),
+                remainingPieces.ToString()  // Aici salvăm numărul de piese rămase pentru câștigătorul ultimului joc
+            });
+        }
+        public (int WhiteWins, int RedWins, int LastWinnerPiecesLeft) GetGameStats()
+        {
+            int whiteWins = 0;
+            int redWins = 0;
+            int lastWinnerPiecesLeft = 0;
+
+            if (File.Exists(statsFilePath))
+            {
+                var lines = File.ReadAllLines(statsFilePath);
+                if (lines.Length >= 3)
+                {
+                    int.TryParse(lines[0], out whiteWins);
+                    int.TryParse(lines[1], out redWins);
+                    int.TryParse(lines[2], out lastWinnerPiecesLeft);  // Aceasta va fi numărul de piese rămase pentru ultimul câștigător
+                }
+            }
+
+            return (whiteWins, redWins, lastWinnerPiecesLeft);
         }
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
