@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,6 +10,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Shapes;
+using System.Xml;
+using Newtonsoft.Json;
 
 namespace Checkers
 {
@@ -23,7 +26,7 @@ namespace Checkers
         private SettingsViewModel settingsViewModel;
         private bool isMultipleJumpInProgress;
         private const string statsFilePath = "game_stats.txt";
-
+        public ICommand SaveCommand { get; private set; }
         public CheckerColor ActivePlayer
         {
             get => activePlayer;
@@ -67,6 +70,7 @@ namespace Checkers
             UpdatePiecesCount();
             InitializeCommands();
             ActivePlayer = CheckerColor.Red;
+            SaveCommand = new RelayCommand(param => SaveGame());
         }
 
         private void UpdatePiecesCount()
@@ -370,10 +374,14 @@ namespace Checkers
         {
             int remainingPieces = CalculateRemainingPieces();
             UpdateStatsFile(winner, remainingPieces);
-            if (settingsViewModel.ShowStatistics)  // Asigură-te că ai acces la instanța corectă a SettingsViewModel
+            if (settingsViewModel.ShowStatistics)
             {
                 var stats = GetGameStats();
-                var message = $"{winner} wins the game!\n\nStatistics:\nWhite Wins: {stats.WhiteWins}\nRed Wins: {stats.RedWins}\nPieces Left for last winner: {stats.LastWinnerPiecesLeft}";
+                var message = $"{winner} wins the game!\n\nStatistics:\n" +
+                    $"White Wins: {stats.WhiteWins}\n" +
+                    $"Red Wins: {stats.RedWins}\n" +
+                    $"Max Pieces Left for White: {stats.MaxWhitePiecesLeft}\n" +
+                    $"Max Pieces Left for Red: {stats.MaxRedPiecesLeft}";
                 MessageBox.Show(message);
             }
             else
@@ -394,56 +402,97 @@ namespace Checkers
         {
             int whiteWins = 0;
             int redWins = 0;
-            // Nu mai avem nevoie de maxPiecesLeft pentru a stoca maximul global
+            int maxWhitePiecesLeft = 0;
+            int maxRedPiecesLeft = 0;
 
             // Citirea datelor existente
             if (File.Exists(statsFilePath))
             {
                 var lines = File.ReadAllLines(statsFilePath);
-                if (lines.Length >= 2)
+                if (lines.Length >= 4)
                 {
                     int.TryParse(lines[0], out whiteWins);
                     int.TryParse(lines[1], out redWins);
-                    // Nu mai citim maxPiecesLeft
+                    int.TryParse(lines[2], out maxWhitePiecesLeft);
+                    int.TryParse(lines[3], out maxRedPiecesLeft);
                 }
             }
 
-            // Actualizarea statisticii
+            // Actualizarea statisticii și a maximului de piese rămase
             if (winner == CheckerColor.White)
             {
                 whiteWins++;
+                if (remainingPieces > maxWhitePiecesLeft)
+                {
+                    maxWhitePiecesLeft = remainingPieces;
+                }
             }
             else if (winner == CheckerColor.Red)
             {
                 redWins++;
+                if (remainingPieces > maxRedPiecesLeft)
+                {
+                    maxRedPiecesLeft = remainingPieces;
+                }
             }
 
-            // Scrierea datelor actuale, inclusiv numărul de piese rămase pentru câștigătorul acestui joc
+            // Scrierea datelor actualizate
             File.WriteAllLines(statsFilePath, new[]
             {
                 whiteWins.ToString(),
                 redWins.ToString(),
-                remainingPieces.ToString()  // Aici salvăm numărul de piese rămase pentru câștigătorul ultimului joc
+                maxWhitePiecesLeft.ToString(),
+                maxRedPiecesLeft.ToString()
             });
         }
-        public (int WhiteWins, int RedWins, int LastWinnerPiecesLeft) GetGameStats()
+
+        public (int WhiteWins, int RedWins, int MaxWhitePiecesLeft, int MaxRedPiecesLeft) GetGameStats()
         {
             int whiteWins = 0;
             int redWins = 0;
-            int lastWinnerPiecesLeft = 0;
+            int maxWhitePiecesLeft = 0;
+            int maxRedPiecesLeft = 0;
 
             if (File.Exists(statsFilePath))
             {
                 var lines = File.ReadAllLines(statsFilePath);
-                if (lines.Length >= 3)
+                if (lines.Length >= 4)
                 {
                     int.TryParse(lines[0], out whiteWins);
                     int.TryParse(lines[1], out redWins);
-                    int.TryParse(lines[2], out lastWinnerPiecesLeft);  // Aceasta va fi numărul de piese rămase pentru ultimul câștigător
+                    int.TryParse(lines[2], out maxWhitePiecesLeft);
+                    int.TryParse(lines[3], out maxRedPiecesLeft);
                 }
             }
 
-            return (whiteWins, redWins, lastWinnerPiecesLeft);
+            return (whiteWins, redWins, maxWhitePiecesLeft, maxRedPiecesLeft);
+        }
+        public void SaveGame()
+        {
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "JSON files (*.json)|*.json"; // Filtrează doar fișierele .json
+            saveFileDialog.DefaultExt = "json"; // Setează extensia implicită ca .json
+            saveFileDialog.AddExtension = true; // Asigură-te că extensia .json este adăugată
+
+            bool? result = saveFileDialog.ShowDialog();
+            if (result == true)
+            {
+                var gameState = new
+                {
+                    ActivePlayer = this.ActivePlayer,
+                    WhitePiecesCount = this.WhitePiecesCount,
+                    RedPiecesCount = this.RedPiecesCount,
+                    AllowMultipleJumps = this.AllowMultipleJumps,
+                    BoardState = this.Squares.Select(s => new { s.Row, s.Column, CheckerColor = s.Checker?.Color, IsKing = s.Checker?.IsKing }).ToList()
+                };
+
+                string json = JsonConvert.SerializeObject(gameState, Newtonsoft.Json.Formatting.Indented);
+                File.WriteAllText(saveFileDialog.FileName, json);
+            }
+            else
+            {
+                MessageBox.Show("Saving canceled", "Save Game", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
@@ -451,4 +500,21 @@ namespace Checkers
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
+    public class GameState
+    {
+        public CheckerColor ActivePlayer { get; set; }
+        public int WhitePiecesCount { get; set; }
+        public int RedPiecesCount { get; set; }
+        public bool AllowMultipleJumps { get; set; }
+        public List<BoardSquareState> BoardState { get; set; }
+    }
+
+    public class BoardSquareState
+    {
+        public int Row { get; set; }
+        public int Column { get; set; }
+        public CheckerColor? CheckerColor { get; set; }
+        public bool IsKing { get; set; }
+    }
+
 }

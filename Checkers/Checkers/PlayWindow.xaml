@@ -25,6 +25,27 @@
             <RowDefinition Height="7*"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Button Content="Save" Grid.Column="0" Grid.Row="0" Command="{Binding SaveCommand}" Width="90" Height="40" x:Name="SaveButton">
+            <Button.Style>
+                <Style TargetType="{x:Type Button}">
+                    <Setter Property="Background" Value="Black"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="BorderBrush" Value="Black"/>
+                    <Setter Property="BorderThickness" Value="2"/>
+                    <Setter Property="FontSize" Value="14"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type Button}">
+                                <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="10">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Button.Style>
+        </Button>
         <StackPanel Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
             <TextBlock Text="{Binding ActivePlayer}" FontSize="30" Foreground="{Binding ActivePlayer, Converter={StaticResource CheckerColorToBrushConverter}}" Margin="10"/>
         </StackPanel>
@@ -40,9 +61,7 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                    <Border Background="{Binding IsWhiteSquare, Converter={StaticResource BoolToColorConverter}}"
-            BorderBrush="Gold" BorderThickness="{Binding IsHighlighted, Converter={StaticResource BooleanToThicknessConverter}}"
-            MouseDown="Border_MouseDown">
+                    <Border Background="{Binding IsWhiteSquare, Converter={StaticResource BoolToColorConverter}}" BorderBrush="Gold" BorderThickness="{Binding IsHighlighted, Converter={StaticResource BooleanToThicknessConverter}}" MouseDown="Border_MouseDown">
                         <Ellipse Fill="{Binding Checker, Converter={StaticResource CheckerColorToBrushConverter}}" Visibility="{Binding Checker, Converter={StaticResource NullToVisibilityConverter}}"/>
                     </Border>
                 </DataTemplate>
