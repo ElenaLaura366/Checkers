@@ -53,7 +53,7 @@
             <TextBlock Text="{Binding WhitePiecesCount}" FontSize="30" Foreground="White"/>
             <TextBlock Text="{Binding RedPiecesCount}" FontSize="30" Foreground="Red"/>
         </StackPanel>
-        <ItemsControl Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Squares}">
+        <ItemsControl x:Name="BoardItemsControl" Grid.Column="1" Grid.Row="1" ItemsSource="{Binding Squares}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Rows="8" Columns="8"/>

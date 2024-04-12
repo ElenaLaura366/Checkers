@@ -16,12 +16,29 @@ namespace Checkers
 {
     public partial class PlayWindow : Window
     {
-        private readonly BoardViewModel boardViewModel;
-        public PlayWindow(bool allowMultipleJumps, SettingsViewModel settingsViewModel)
+        internal BoardViewModel boardViewModel { get; private set; }
+        public PlayWindow(bool allowMultipleJumps, SettingsViewModel settingsViewModel, GameState gameState = null)
         {
             InitializeComponent();
-            boardViewModel = new BoardViewModel(allowMultipleJumps, settingsViewModel);
+            if (gameState != null)
+            {
+                boardViewModel = new BoardViewModel(allowMultipleJumps, settingsViewModel, gameState);
+            }
+            else
+            {
+                boardViewModel = new BoardViewModel(allowMultipleJumps, settingsViewModel);
+            }
             DataContext = boardViewModel;
+        }
+        public void UpdateBoardViewModel(BoardViewModel viewModel)
+        {
+            boardViewModel = viewModel;
+            DataContext = viewModel;
+        }
+        public void RefreshBoard()
+        {
+            BoardItemsControl.ItemsSource = null;
+            BoardItemsControl.ItemsSource = ((BoardViewModel)DataContext).Squares;
         }
         private void Border_MouseDown(object sender, MouseButtonEventArgs e)
         {

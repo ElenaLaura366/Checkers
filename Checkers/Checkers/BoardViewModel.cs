@@ -60,19 +60,51 @@ namespace Checkers
                 OnPropertyChanged(nameof(RedPiecesCount));
             }
         }
-
-        public BoardViewModel(bool allowMultipleJumps, SettingsViewModel settings)
+        public BoardViewModel(bool allowMultipleJumps, SettingsViewModel settings, GameState gameState = null)
         {
             AllowMultipleJumps = allowMultipleJumps;
             this.settingsViewModel = settings;
             Squares = new ObservableCollection<BoardSquare>();
-            SetupBoard();
+            if (gameState != null)
+            {
+                LoadFromGameState(gameState);
+            }
+            else
+            {
+                SetupBoard();
+            }
             UpdatePiecesCount();
             InitializeCommands();
-            ActivePlayer = CheckerColor.Red;
-            SaveCommand = new RelayCommand(param => SaveGame());
+            ActivePlayer = gameState?.ActivePlayer ?? CheckerColor.Red;
+            SaveCommand = new RelayCommand(SaveGame);
         }
+        private void LoadFromGameState(GameState gameState)
+        {
+            Squares.Clear();  // Clear any existing squares before loading new ones
 
+            foreach (var squareState in gameState.BoardState)
+            {
+                var checker = squareState.CheckerColor.HasValue ? new Checker
+                {
+                    Color = (CheckerColor)squareState.CheckerColor,
+                    IsKing = squareState.IsKing ?? false
+                } : null;
+
+                var square = new BoardSquare(new RelayCommand(param => HandleSquareSelected(param as BoardSquare)))
+                {
+                    Row = squareState.Row,
+                    Column = squareState.Column,
+                    Checker = checker,
+                    IsWhiteSquare = (squareState.Row + squareState.Column) % 2 == 0
+                };
+
+                Squares.Add(square);
+            }
+
+            ActivePlayer = (CheckerColor)gameState.ActivePlayer;
+            WhitePiecesCount = gameState.WhitePiecesCount;
+            RedPiecesCount = gameState.RedPiecesCount;
+        }
         private void UpdatePiecesCount()
         {
             WhitePiecesCount = Squares.Count(s => s.Checker?.Color == CheckerColor.White);
@@ -493,6 +525,15 @@ namespace Checkers
             {
                 MessageBox.Show("Saving canceled", "Save Game", MessageBoxButton.OK, MessageBoxImage.Information);
             }
+            var mainWindow = new MainWindow();
+            mainWindow.Show();
+            foreach (Window window in Application.Current.Windows)
+            {
+                if (window is PlayWindow)
+                {
+                    window.Close();
+                }
+            }
         }
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
@@ -500,21 +541,4 @@ namespace Checkers
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
-    public class GameState
-    {
-        public CheckerColor ActivePlayer { get; set; }
-        public int WhitePiecesCount { get; set; }
-        public int RedPiecesCount { get; set; }
-        public bool AllowMultipleJumps { get; set; }
-        public List<BoardSquareState> BoardState { get; set; }
-    }
-
-    public class BoardSquareState
-    {
-        public int Row { get; set; }
-        public int Column { get; set; }
-        public CheckerColor? CheckerColor { get; set; }
-        public bool IsKing { get; set; }
-    }
-
 }
