@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using Checkers.ViewModels;
+using Checkers.Models;
 
 namespace Checkers
 {
@@ -29,11 +21,6 @@ namespace Checkers
                 boardViewModel = new BoardViewModel(allowMultipleJumps, settingsViewModel);
             }
             DataContext = boardViewModel;
-        }
-        public void UpdateBoardViewModel(BoardViewModel viewModel)
-        {
-            boardViewModel = viewModel;
-            DataContext = viewModel;
         }
         public void RefreshBoard()
         {

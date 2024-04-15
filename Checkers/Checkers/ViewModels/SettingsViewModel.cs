@@ -1,15 +1,13 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Checkers.Models;
 
-namespace Checkers
+namespace Checkers.ViewModels
 {
     public class SettingsViewModel : INotifyPropertyChanged
     {
@@ -59,13 +57,11 @@ namespace Checkers
                 OnPropertyChanged(nameof(CanChangeSettings));
             }
         }
-
         public SettingsViewModel()
         {
             PlayCommand = new RelayCommand(play);
             OpenCommand = new RelayCommand(open);
         }
-
         private void CloseWindow()
         {
             foreach (Window window in Application.Current.Windows)
@@ -152,6 +148,5 @@ namespace Checkers
                 playWindow.RefreshBoard();
             }
         }
-
     }
 }

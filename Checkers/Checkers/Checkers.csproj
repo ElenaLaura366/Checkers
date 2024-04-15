@@ -59,33 +59,33 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="AboutViewModel.cs" />
-    <Compile Include="AboutWindow.xaml.cs">
+    <Compile Include="ViewModels\AboutViewModel.cs" />
+    <Compile Include="Views\AboutWindow.xaml.cs">
       <DependentUpon>AboutWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="BoardSquare.cs" />
-    <Compile Include="BoardSquareState.cs" />
-    <Compile Include="BoardViewModel.cs" />
-    <Compile Include="BooleanToThicknessConverter.cs" />
-    <Compile Include="BooleanToVisibilityConverter.cs" />
-    <Compile Include="BoolToColorConverter.cs" />
-    <Compile Include="Checker.cs" />
-    <Compile Include="CheckerColorToBrushConverter.cs" />
-    <Compile Include="GameState.cs" />
-    <Compile Include="NullToVisibilityConverter.cs" />
-    <Compile Include="PlayWindow.xaml.cs">
+    <Compile Include="ViewModels\BoardSquare.cs" />
+    <Compile Include="Models\BoardSquareState.cs" />
+    <Compile Include="ViewModels\BoardViewModel.cs" />
+    <Compile Include="Converters\BooleanToThicknessConverter.cs" />
+    <Compile Include="Converters\BooleanToVisibilityConverter.cs" />
+    <Compile Include="Converters\BoolToColorConverter.cs" />
+    <Compile Include="Models\Checker.cs" />
+    <Compile Include="Converters\CheckerColorToBrushConverter.cs" />
+    <Compile Include="Models\GameState.cs" />
+    <Compile Include="Converters\NullToVisibilityConverter.cs" />
+    <Compile Include="Views\PlayWindow.xaml.cs">
       <DependentUpon>PlayWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="RelayCommand.cs" />
-    <Compile Include="SettingsViewModel.cs" />
-    <Compile Include="SettingsWindow.xaml.cs">
+    <Compile Include="Commands\RelayCommand.cs" />
+    <Compile Include="ViewModels\SettingsViewModel.cs" />
+    <Compile Include="Views\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
-    <Page Include="AboutWindow.xaml">
+    <Page Include="Views\AboutWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindow.xaml">
+    <Page Include="Views\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -93,16 +93,16 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="MainViewModel.cs" />
-    <Compile Include="MainWindow.xaml.cs">
+    <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="Views\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="PlayWindow.xaml">
+    <Page Include="Views\PlayWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="SettingsWindow.xaml">
+    <Page Include="Views\SettingsWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -134,5 +134,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

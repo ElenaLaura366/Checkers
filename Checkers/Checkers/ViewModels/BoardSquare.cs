@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
+using Checkers.Models;
 
-namespace Checkers
+namespace Checkers.ViewModels
 {
     public class BoardSquare : INotifyPropertyChanged
     {
@@ -45,7 +42,6 @@ namespace Checkers
         {
             SquareClickCommand = clickCommand ?? throw new ArgumentNullException(nameof(clickCommand));
         }
-
         public Checker Checker
         {
             get => checker;
@@ -55,7 +51,6 @@ namespace Checkers
                 OnPropertyChanged(nameof(Checker));
             }
         }
-
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
         {

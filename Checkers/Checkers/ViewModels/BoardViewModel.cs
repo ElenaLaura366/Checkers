@@ -5,27 +5,25 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Shapes;
-using System.Xml;
 using Newtonsoft.Json;
+using Checkers.Models;
 
-namespace Checkers
+namespace Checkers.ViewModels
 {
     public class BoardViewModel : INotifyPropertyChanged
     {
         public ObservableCollection<BoardSquare> Squares { get; set; }
-
         private int whitePiecesCount;
         private int redPiecesCount;
         private BoardSquare selectedSquare;
-        public bool AllowMultipleJumps { get; }
-        private SettingsViewModel settingsViewModel;
+        private CheckerColor activePlayer;
         private bool isMultipleJumpInProgress;
+        private readonly bool allowMultipleJumps;
+        private readonly SettingsViewModel settingsViewModel;
         private const string statsFilePath = "game_stats.txt";
+        public bool AllowMultipleJumps => allowMultipleJumps;
         public ICommand SaveCommand { get; private set; }
         public CheckerColor ActivePlayer
         {
@@ -39,8 +37,6 @@ namespace Checkers
                 }
             }
         }
-        private CheckerColor activePlayer;
-
         public int WhitePiecesCount
         {
             get => whitePiecesCount;
@@ -50,7 +46,6 @@ namespace Checkers
                 OnPropertyChanged(nameof(WhitePiecesCount));
             }
         }
-
         public int RedPiecesCount
         {
             get => redPiecesCount;
@@ -62,7 +57,7 @@ namespace Checkers
         }
         public BoardViewModel(bool allowMultipleJumps, SettingsViewModel settings, GameState gameState = null)
         {
-            AllowMultipleJumps = allowMultipleJumps;
+            this.allowMultipleJumps = allowMultipleJumps;
             this.settingsViewModel = settings;
             Squares = new ObservableCollection<BoardSquare>();
             if (gameState != null)
@@ -77,6 +72,14 @@ namespace Checkers
             InitializeCommands();
             ActivePlayer = gameState?.ActivePlayer ?? CheckerColor.Red;
             SaveCommand = new RelayCommand(SaveGame);
+        }
+        private void InitializeCommands()
+        {
+            foreach (var square in Squares)
+            {
+                BoardSquare currentSquare = square;
+                square.SquareClickCommand = new RelayCommand(param => HandleSquareSelected(currentSquare));
+            }
         }
         private void LoadFromGameState(GameState gameState)
         {
@@ -105,12 +108,79 @@ namespace Checkers
             WhitePiecesCount = gameState.WhitePiecesCount;
             RedPiecesCount = gameState.RedPiecesCount;
         }
+        private void SetupBoard()
+        {
+            for (int row = 0; row < 8; row++)
+            {
+                for (int column = 0; column < 8; column++)
+                {
+                    var isWhiteSquare = (row + column) % 2 == 0;
+                    var checker = (row < 3 && !isWhiteSquare) ? new Checker { Color = CheckerColor.White } :
+                                  (row > 4 && !isWhiteSquare) ? new Checker { Color = CheckerColor.Red } :
+                                  null;
+
+                    var square = new BoardSquare(new RelayCommand(param => HandleSquareSelected(param as BoardSquare)))
+                    {
+                        Row = row,
+                        Column = column,
+                        IsWhiteSquare = isWhiteSquare,
+                        Checker = checker
+                    };
+
+                    Squares.Add(square);
+                }
+            }
+        }
+        private BoardSquare GetSquare(int row, int column)
+        {
+            if (row >= 0 && row < 8 && column >= 0 && column < 8)
+            {
+                return Squares.FirstOrDefault(s => s.Row == row && s.Column == column);
+            }
+            return null;
+        }
+        public (int WhiteWins, int RedWins, int MaxWhitePiecesLeft, int MaxRedPiecesLeft) GetGameStats()
+        {
+            int whiteWins = 0;
+            int redWins = 0;
+            int maxWhitePiecesLeft = 0;
+            int maxRedPiecesLeft = 0;
+
+            if (File.Exists(statsFilePath))
+            {
+                var lines = File.ReadAllLines(statsFilePath);
+                if (lines.Length >= 4)
+                {
+                    int.TryParse(lines[0], out whiteWins);
+                    int.TryParse(lines[1], out redWins);
+                    int.TryParse(lines[2], out maxWhitePiecesLeft);
+                    int.TryParse(lines[3], out maxRedPiecesLeft);
+                }
+            }
+
+            return (whiteWins, redWins, maxWhitePiecesLeft, maxRedPiecesLeft);
+        }
+        private IEnumerable<(int Row, int Column)> GetMoveDirections(Checker checker)
+        {
+            if (checker == null) yield break;
+
+            if (checker.Color == CheckerColor.Red || checker.IsKing)
+            {
+                yield return (-1, -1); // sus-stânga pentru roșu sau rege
+                yield return (-1, 1);  // sus-dreapta pentru roșu sau rege
+            }
+
+            if (checker.Color == CheckerColor.White || checker.IsKing)
+            {
+                yield return (1, -1);  // jos-stânga pentru alb sau rege
+                yield return (1, 1);   // jos-dreapta pentru alb sau rege
+            }
+        }
         private void UpdatePiecesCount()
         {
             WhitePiecesCount = Squares.Count(s => s.Checker?.Color == CheckerColor.White);
             RedPiecesCount = Squares.Count(s => s.Checker?.Color == CheckerColor.Red);
         }
-
         public void HandleSquareSelected(BoardSquare square)
         {
             if (square.Checker?.Color == ActivePlayer)
@@ -140,6 +210,20 @@ namespace Checkers
             {
                 MoveChecker(selectedSquare, square);
                 ClearSelections();
+            }
+        }
+        private void HighlightPossibleMoves(BoardSquare square)
+        {
+            ClearSelections();
+
+            var jumps = CalculateAllJumps(square, new List<BoardSquare>());
+            var moves = CalculatePossibleMoves(square);
+
+            var allMoves = jumps.Concat(moves).Distinct().ToList();
+
+            foreach (var move in allMoves)
+            {
+                move.IsHighlighted = true;
             }
         }
         private List<BoardSquare> CalculateImmediateJumps(BoardSquare square)
@@ -178,46 +262,6 @@ namespace Checkers
 
             return jumps.Distinct().ToList();
         }
-
-        private void HighlightPossibleMoves(BoardSquare square)
-        {
-            ClearSelections();
-
-            var moves = CalculateAllJumps(square, new List<BoardSquare>());
-            if (!moves.Any()) // Dacă nu există sărituri, afișează mișcările normale
-            {
-                moves = CalculatePossibleMoves(square);
-            }
-
-            foreach (var move in moves)
-            {
-                move.IsHighlighted = true;
-            }
-        }
-        private IEnumerable<(int Row, int Column)> GetMoveDirections(Checker checker)
-        {
-            if (checker == null) yield break;
-
-            if (checker.Color == CheckerColor.Red || checker.IsKing)
-            {
-                yield return (-1, -1); // sus-stânga pentru roșu sau rege
-                yield return (-1, 1);  // sus-dreapta pentru roșu sau rege
-            }
-
-            if (checker.Color == CheckerColor.White || checker.IsKing)
-            {
-                yield return (1, -1);  // jos-stânga pentru alb sau rege
-                yield return (1, 1);   // jos-dreapta pentru alb sau rege
-            }
-        }
-        private BoardSquare GetSquare(int row, int column)
-        {
-            if (row >= 0 && row < 8 && column >= 0 && column < 8)
-            {
-                return Squares.FirstOrDefault(s => s.Row == row && s.Column == column);
-            }
-            return null;
-        }
         private void CheckForPromotion(BoardSquare square)
         {
             if (square.Checker != null &&
@@ -231,12 +275,6 @@ namespace Checkers
         private List<BoardSquare> CalculatePossibleMoves(BoardSquare square)
         {
             var moves = CalculateImmediateJumps(square);
-            if (moves.Any())
-            {
-                return moves;
-            }
-
-            // Adaugă mișcările normale dacă nu există sărituri
             var directions = GetMoveDirections(square.Checker);
             foreach (var direction in directions)
             {
@@ -246,7 +284,6 @@ namespace Checkers
                     moves.Add(targetSquare);
                 }
             }
-
             return moves;
         }
         private void ClearSelections()
@@ -267,6 +304,19 @@ namespace Checkers
             {
                 capturedSquare.Checker = null;
             }
+        }
+        private bool IsValidMove(BoardSquare fromSquare, BoardSquare toSquare)
+        {
+            if (fromSquare.Checker == null || toSquare.Checker != null) return false;
+
+            int rowDiff = toSquare.Row - fromSquare.Row;
+            int colDiff = Math.Abs(toSquare.Column - fromSquare.Column);
+
+            bool isKing = fromSquare.Checker.IsKing;
+            bool isForwardMove = (fromSquare.Checker.Color == CheckerColor.White && rowDiff == -1) ||
+                                 (fromSquare.Checker.Color == CheckerColor.Red && rowDiff == 1);
+
+            return colDiff == 1 && (isForwardMove || (isKing && Math.Abs(rowDiff) == 1));
         }
         private void MoveChecker(BoardSquare fromSquare, BoardSquare toSquare)
         {
@@ -315,63 +365,17 @@ namespace Checkers
                 EndGame(winner.Value);
             }
         }
-        private void InitializeCommands()
+        private bool HasValidMoves(CheckerColor playerColor)
         {
-            foreach (var square in Squares)
+            foreach (var square in Squares.Where(s => s.Checker?.Color == playerColor))
             {
-                square.SquareClickCommand = new RelayCommand(param => MoveChecker(square));
-            }
-        }
-        private void MoveChecker(BoardSquare destinationSquare)
-        {
-            var selectedCheckerSquare = Squares.FirstOrDefault(sq => sq.IsSelected && sq.Checker != null);
-            if (selectedCheckerSquare != null && IsValidMove(selectedCheckerSquare, destinationSquare))
-            {
-                destinationSquare.Checker = selectedCheckerSquare.Checker;
-                selectedCheckerSquare.Checker = null;
-                UpdatePiecesCount();
-            }
-
-        }
-
-        private bool IsValidMove(BoardSquare fromSquare, BoardSquare toSquare)
-        {
-            if (fromSquare.Checker == null || toSquare.Checker != null) return false;
-
-            int rowDiff = toSquare.Row - fromSquare.Row;
-            int colDiff = Math.Abs(toSquare.Column - fromSquare.Column);
-
-            bool isKing = fromSquare.Checker.IsKing;
-            bool isForwardMove = (fromSquare.Checker.Color == CheckerColor.White && rowDiff == -1) ||
-                                 (fromSquare.Checker.Color == CheckerColor.Red && rowDiff == 1);
-
-            return colDiff == 1 && (isForwardMove || (isKing && Math.Abs(rowDiff) == 1));
-        }
-
-        private void SetupBoard()
-        {
-            for (int row = 0; row < 8; row++)
-            {
-                for (int column = 0; column < 8; column++)
+                if (CalculatePossibleMoves(square).Any())
                 {
-                    var isWhiteSquare = (row + column) % 2 == 0;
-                    var checker = (row < 3 && !isWhiteSquare) ? new Checker { Color = CheckerColor.White } :
-                                  (row > 4 && !isWhiteSquare) ? new Checker { Color = CheckerColor.Red } :
-                                  null;
-
-                    var square = new BoardSquare(new RelayCommand(param => HandleSquareSelected(param as BoardSquare)))
-                    {
-                        Row = row,
-                        Column = column,
-                        IsWhiteSquare = isWhiteSquare,
-                        Checker = checker
-                    };
-
-                    Squares.Add(square);
+                    return true;
                 }
             }
+            return false;
         }
-
         public CheckerColor? CheckForWinner()
         {
             if (WhitePiecesCount == 0 || !HasValidMoves(CheckerColor.White))
@@ -385,23 +389,6 @@ namespace Checkers
 
             return null; // Jocul continuă
         }
-
-        private bool HasValidMoves(CheckerColor playerColor)
-        {
-            foreach (var square in Squares.Where(s => s.Checker?.Color == playerColor))
-            {
-                if (CalculatePossibleMoves(square).Any())
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-        private int CalculateRemainingPieces()
-        {
-            return Squares.Count(square => square.Checker != null);
-        }
-
         private void EndGame(CheckerColor winner)
         {
             int remainingPieces = CalculateRemainingPieces();
@@ -477,27 +464,9 @@ namespace Checkers
                 maxRedPiecesLeft.ToString()
             });
         }
-
-        public (int WhiteWins, int RedWins, int MaxWhitePiecesLeft, int MaxRedPiecesLeft) GetGameStats()
+        private int CalculateRemainingPieces()
         {
-            int whiteWins = 0;
-            int redWins = 0;
-            int maxWhitePiecesLeft = 0;
-            int maxRedPiecesLeft = 0;
-
-            if (File.Exists(statsFilePath))
-            {
-                var lines = File.ReadAllLines(statsFilePath);
-                if (lines.Length >= 4)
-                {
-                    int.TryParse(lines[0], out whiteWins);
-                    int.TryParse(lines[1], out redWins);
-                    int.TryParse(lines[2], out maxWhitePiecesLeft);
-                    int.TryParse(lines[3], out maxRedPiecesLeft);
-                }
-            }
-
-            return (whiteWins, redWins, maxWhitePiecesLeft, maxRedPiecesLeft);
+            return Squares.Count(square => square.Checker != null);
         }
         public void SaveGame()
         {

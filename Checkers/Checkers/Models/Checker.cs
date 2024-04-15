@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Checkers
+namespace Checkers.Models
 {
     public enum CheckerColor
     {
@@ -17,9 +13,6 @@ namespace Checkers
     public class Checker : INotifyPropertyChanged
     {
         private bool isKing;
-
-        public CheckerColor Color { get; set; }
-
         public bool IsKing
         {
             get => isKing;
@@ -32,9 +25,8 @@ namespace Checkers
                 }
             }
         }
-
+        public CheckerColor Color { get; set; }
         public event PropertyChangedEventHandler PropertyChanged;
-
         protected virtual void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
