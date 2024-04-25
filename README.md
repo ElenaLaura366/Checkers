@@ -19,7 +19,7 @@ Follow these steps to run the application:
 4. **Game Save and Load**: Players can save their current game state to a file and load it later. This functionality supports different file formats (binary, text, JSON, XML, etc.).
 5. **Dynamic Game Configuration**: Through the game menu, users can start a new game, save current game configurations, open a previously saved game, and enable options like multiple jumps.
 6. **User Interface**: The main window displays the checker's board and indicates which player's turn it is. At the end of a game, a message announces the winner.
-
+7. **AI Implementation**: The application includes an AI component using the Minimax algorithm, providing challenging gameplay against the computer opponent.
 ## Usage
 
 Upon launching the Checkers game application, you are greeted with the main menu, which offers two primary options: *About* and *Play*.
