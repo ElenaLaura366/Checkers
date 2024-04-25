@@ -112,15 +112,12 @@ namespace Checkers.ViewModels
             var playWindow = (PlayWindow)Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w is PlayWindow);
             if (playWindow != null && gameState != null)
             {
-                // Create a new BoardViewModel with the loaded game state
                 var newViewModel = new BoardViewModel(gameState.AllowMultipleJumps, this)
                 {
                     ActivePlayer = (CheckerColor)gameState.ActivePlayer,
                     WhitePiecesCount = gameState.WhitePiecesCount,
                     RedPiecesCount = gameState.RedPiecesCount
                 };
-
-                // Clear existing squares and load the new state
                 newViewModel.Squares.Clear();
                 foreach (var squareState in gameState.BoardState)
                 {
@@ -140,11 +137,7 @@ namespace Checkers.ViewModels
 
                     newViewModel.Squares.Add(square);
                 }
-
-                // Update the DataContext of the play window
                 playWindow.DataContext = newViewModel;
-
-                // This assumes PlayWindow has a method or mechanism to update the UI with the new BoardViewModel
                 playWindow.RefreshBoard();
             }
         }

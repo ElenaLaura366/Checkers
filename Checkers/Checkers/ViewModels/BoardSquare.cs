@@ -51,6 +51,22 @@ namespace Checkers.ViewModels
                 OnPropertyChanged(nameof(Checker));
             }
         }
+        public BoardSquare Clone()
+        {
+            var clonedSquare = new BoardSquare(this.SquareClickCommand)
+            {
+                Checker = this.Checker?.Clone(),
+                IsHighlighted = this.IsHighlighted,
+                IsSelected = this.IsSelected,
+                IsWhiteSquare = this.IsWhiteSquare,
+                Row = this.Row,
+                Column = this.Column,
+            };
+
+            return clonedSquare;
+        }
+
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
         {

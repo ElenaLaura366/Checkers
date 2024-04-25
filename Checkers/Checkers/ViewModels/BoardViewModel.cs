@@ -83,7 +83,7 @@ namespace Checkers.ViewModels
         }
         private void LoadFromGameState(GameState gameState)
         {
-            Squares.Clear();  // Clear any existing squares before loading new ones
+            Squares.Clear();
 
             foreach (var squareState in gameState.BoardState)
             {
@@ -110,6 +110,7 @@ namespace Checkers.ViewModels
         }
         private void SetupBoard()
         {
+            ICommand squareCommand = new RelayCommand(param => HandleSquareSelected(param as BoardSquare));
             for (int row = 0; row < 8; row++)
             {
                 for (int column = 0; column < 8; column++)
@@ -119,7 +120,7 @@ namespace Checkers.ViewModels
                                   (row > 4 && !isWhiteSquare) ? new Checker { Color = CheckerColor.Red } :
                                   null;
 
-                    var square = new BoardSquare(new RelayCommand(param => HandleSquareSelected(param as BoardSquare)))
+                    var square = new BoardSquare(squareCommand)
                     {
                         Row = row,
                         Column = column,
@@ -131,6 +132,7 @@ namespace Checkers.ViewModels
                 }
             }
         }
+
         private BoardSquare GetSquare(int row, int column)
         {
             if (row >= 0 && row < 8 && column >= 0 && column < 8)
@@ -166,14 +168,14 @@ namespace Checkers.ViewModels
 
             if (checker.Color == CheckerColor.Red || checker.IsKing)
             {
-                yield return (-1, -1); // sus-stânga pentru roșu sau rege
-                yield return (-1, 1);  // sus-dreapta pentru roșu sau rege
+                yield return (-1, -1);
+                yield return (-1, 1);
             }
 
             if (checker.Color == CheckerColor.White || checker.IsKing)
             {
-                yield return (1, -1);  // jos-stânga pentru alb sau rege
-                yield return (1, 1);   // jos-dreapta pentru alb sau rege
+                yield return (1, -1);
+                yield return (1, 1);
             }
         }
         private void UpdatePiecesCount()
@@ -183,33 +185,41 @@ namespace Checkers.ViewModels
         }
         public void HandleSquareSelected(BoardSquare square)
         {
-            if (square.Checker?.Color == ActivePlayer)
+            if (activePlayer == CheckerColor.White)
             {
-                if (!isMultipleJumpInProgress || (isMultipleJumpInProgress && square == selectedSquare))
+                Ai_move();
+                ActivePlayer = CheckerColor.Red;
+            }
+            else
+            {
+                if (square.Checker?.Color == CheckerColor.Red)
                 {
-                    if (selectedSquare != null && IsValidMove(selectedSquare, square))
+                    if (!isMultipleJumpInProgress || (isMultipleJumpInProgress && square == selectedSquare))
                     {
-                        MoveChecker(selectedSquare, square);
-                        ClearSelections();
-                    }
-                    else if (selectedSquare != null && square.IsHighlighted)
-                    {
-                        MoveChecker(selectedSquare, square);
-                        ClearSelections();
-                    }
-                    else if (square.Checker != null)
-                    {
-                        ClearSelections();
-                        selectedSquare = square;
-                        square.IsSelected = true;
-                        HighlightPossibleMoves(square);
+                        if (selectedSquare != null && IsValidMove(selectedSquare, square))
+                        {
+                            MoveChecker(selectedSquare, square);
+                            ClearSelections();
+                        }
+                        else if (selectedSquare != null && square.IsHighlighted)
+                        {
+                            MoveChecker(selectedSquare, square);
+                            ClearSelections();
+                        }
+                        else if (square.Checker != null)
+                        {
+                            ClearSelections();
+                            selectedSquare = square;
+                            square.IsSelected = true;
+                            HighlightPossibleMoves(square);
+                        }
                     }
                 }
-            }
-            else if (square.IsHighlighted && selectedSquare != null)
-            {
-                MoveChecker(selectedSquare, square);
-                ClearSelections();
+                else if (square.IsHighlighted && selectedSquare != null)
+                {
+                    MoveChecker(selectedSquare, square);
+                    ClearSelections();
+                }
             }
         }
         private void HighlightPossibleMoves(BoardSquare square)
@@ -252,7 +262,7 @@ namespace Checkers.ViewModels
 
             foreach (var jump in immediateJumps)
             {
-                if (!path.Contains(jump)) // Evită ciclarea
+                if (!path.Contains(jump))
                 {
                     var nextPath = new List<BoardSquare>(path) { jump };
                     jumps.Add(jump);
@@ -268,7 +278,7 @@ namespace Checkers.ViewModels
                 ((square.Row == 7 && square.Checker.Color == CheckerColor.White) ||
                  (square.Row == 0 && square.Checker.Color == CheckerColor.Red)))
             {
-                square.Checker.IsKing = true;  // Aceasta ar trebui să declanșeze notificarea
+                square.Checker.IsKing = true;
                 OnPropertyChanged(nameof(Squares));
             }
         }
@@ -324,7 +334,7 @@ namespace Checkers.ViewModels
             fromSquare.Checker = null;
 
             int rowDiff = toSquare.Row - fromSquare.Row;
-            if (Math.Abs(rowDiff) == 2) // Dacă este o captură
+            if (Math.Abs(rowDiff) == 2)
             {
                 PerformCapture(fromSquare, toSquare);
                 CheckForPromotion(toSquare);
@@ -333,7 +343,6 @@ namespace Checkers.ViewModels
                 var additionalJumps = CalculatePossibleMoves(toSquare).Where(m => Math.Abs(m.Row - toSquare.Row) == 2).ToList();
                 if (AllowMultipleJumps && additionalJumps.Any())
                 {
-                    // Continuă săriturile multiple dacă sunt posibile
                     isMultipleJumpInProgress = true;
                     selectedSquare = toSquare;
                     toSquare.IsSelected = true;
@@ -341,7 +350,6 @@ namespace Checkers.ViewModels
                 }
                 else
                 {
-                    // Termină săriturile multiple și schimbă jucătorul
                     isMultipleJumpInProgress = false;
                     selectedSquare = null;
                     ClearSelections();
@@ -350,19 +358,34 @@ namespace Checkers.ViewModels
             }
             else
             {
-                // Pentru mișcările normale, schimbă jucătorul activ
                 CheckForPromotion(toSquare);
                 ActivePlayer = ActivePlayer == CheckerColor.Red ? CheckerColor.White : CheckerColor.Red;
                 isMultipleJumpInProgress = false;
                 selectedSquare = null;
                 ClearSelections();
             }
-
-            // Verifică dacă există un câștigător
             var winner = CheckForWinner();
             if (winner != null)
             {
                 EndGame(winner.Value);
+            }
+        }
+        private void ManageMultiJump(BoardSquare toSquare)
+        {
+            var additionalJumps = CalculatePossibleMoves(toSquare).Where(m => Math.Abs(m.Row - toSquare.Row) == 2).ToList();
+            if (AllowMultipleJumps && additionalJumps.Any())
+            {
+                isMultipleJumpInProgress = true;
+                selectedSquare = toSquare;
+                toSquare.IsSelected = true;
+                HighlightPossibleMoves(toSquare);
+            }
+            else
+            {
+                isMultipleJumpInProgress = false;
+                selectedSquare = null;
+                ClearSelections();
+                ActivePlayer = ActivePlayer == CheckerColor.Red ? CheckerColor.White : CheckerColor.Red;
             }
         }
         private bool HasValidMoves(CheckerColor playerColor)
@@ -387,7 +410,7 @@ namespace Checkers.ViewModels
                 return CheckerColor.White;
             }
 
-            return null; // Jocul continuă
+            return null;
         }
         private void EndGame(CheckerColor winner)
         {
@@ -424,7 +447,6 @@ namespace Checkers.ViewModels
             int maxWhitePiecesLeft = 0;
             int maxRedPiecesLeft = 0;
 
-            // Citirea datelor existente
             if (File.Exists(statsFilePath))
             {
                 var lines = File.ReadAllLines(statsFilePath);
@@ -437,7 +459,6 @@ namespace Checkers.ViewModels
                 }
             }
 
-            // Actualizarea statisticii și a maximului de piese rămase
             if (winner == CheckerColor.White)
             {
                 whiteWins++;
@@ -455,7 +476,6 @@ namespace Checkers.ViewModels
                 }
             }
 
-            // Scrierea datelor actualizate
             File.WriteAllLines(statsFilePath, new[]
             {
                 whiteWins.ToString(),
@@ -471,9 +491,9 @@ namespace Checkers.ViewModels
         public void SaveGame()
         {
             SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "JSON files (*.json)|*.json"; // Filtrează doar fișierele .json
-            saveFileDialog.DefaultExt = "json"; // Setează extensia implicită ca .json
-            saveFileDialog.AddExtension = true; // Asigură-te că extensia .json este adăugată
+            saveFileDialog.Filter = "JSON files (*.json)|*.json";
+            saveFileDialog.DefaultExt = "json";
+            saveFileDialog.AddExtension = true;
 
             bool? result = saveFileDialog.ShowDialog();
             if (result == true)
@@ -504,6 +524,137 @@ namespace Checkers.ViewModels
                 }
             }
         }
+        int EvaluateGameState(BoardViewModel board)
+        {
+            int score = 0;
+            foreach (var square in board.Squares)
+            {
+                if (square.Checker != null)
+                {
+                    if (square.Checker.Color == CheckerColor.White)
+                    {
+                        score += 10;
+                        if (square.Checker.IsKing)
+                            score += 20;
+                    }
+                    else
+                    {
+                        score -= 10;
+                        if (square.Checker.IsKing)
+                            score -= 20;
+                    }
+                }
+            }
+            return score;
+        }
+        public BoardViewModel Clone()
+        {
+            var clonedBoard = new BoardViewModel(this.allowMultipleJumps, this.settingsViewModel);
+            ICommand clickCommand = new RelayCommand(param => HandleSquareSelected(param as BoardSquare));
+            clonedBoard.Squares = new ObservableCollection<BoardSquare>(this.Squares.Select(square => new BoardSquare(clickCommand)
+            {
+                Row = square.Row,
+                Column = square.Column,
+                IsWhiteSquare = square.IsWhiteSquare,
+                Checker = square.Checker == null ? null : new Checker
+                {
+                    Color = square.Checker.Color,
+                    IsKing = square.Checker.IsKing
+                }
+            }));
+            clonedBoard.activePlayer = this.activePlayer;
+            clonedBoard.whitePiecesCount = this.whitePiecesCount;
+            clonedBoard.redPiecesCount = this.redPiecesCount;
+            return clonedBoard;
+        }
+        public void SimulateMove(BoardSquare fromSquare, BoardSquare toSquare, BoardViewModel simulatedBoard)
+        {
+            toSquare.Checker = fromSquare.Checker;
+            fromSquare.Checker = null;
+        }
+        (int, BoardSquare, BoardSquare) Minimax(BoardViewModel board, int depth, bool maximizingPlayer, int alpha, int beta)
+        {
+            if (depth == 0 || board.CheckForWinner() != null)
+            {
+                return (EvaluateGameState(board), null, null);
+            }
+
+            BoardSquare bestSource = null;
+            BoardSquare bestTarget = null;
+
+            if (maximizingPlayer)
+            {
+                int maxEval = int.MinValue;
+                foreach (var square in board.Squares.Where(s => s.Checker?.Color == CheckerColor.White))
+                {
+                    var moves = board.CalculatePossibleMoves(square);
+                    foreach (var target in moves)
+                    {
+                        var simulatedBoard = board.Clone();
+                        simulatedBoard.SimulateMove(square, target, simulatedBoard);
+
+                        var eval = Minimax(simulatedBoard, depth - 1, false, alpha, beta).Item1;
+
+                        if (eval > maxEval)
+                        {
+                            maxEval = eval;
+                            bestSource = square;
+                            bestTarget = target;
+                        }
+
+                        alpha = Math.Max(alpha, eval);
+                        if (beta <= alpha)
+                            break;
+                    }
+                    if (beta <= alpha)
+                        break;
+                }
+                return (maxEval, bestSource, bestTarget);
+            }
+            else
+            {
+                int minEval = int.MaxValue;
+                foreach (var square in board.Squares.Where(s => s.Checker?.Color == CheckerColor.Red))
+                {
+                    var moves = board.CalculatePossibleMoves(square);
+                    foreach (var target in moves)
+                    {
+                        var simulatedBoard = board.Clone();
+                        simulatedBoard.SimulateMove(square, target, simulatedBoard);
+
+                        var eval = Minimax(simulatedBoard, depth - 1, true, alpha, beta).Item1;
+
+                        if (eval < minEval)
+                        {
+                            minEval = eval;
+                            bestSource = square;
+                            bestTarget = target;
+                        }
+
+                        beta = Math.Min(beta, eval);
+                        if (beta <= alpha)
+                            break;
+                    }
+                    if (beta <= alpha)
+                        break;
+                }
+                return (minEval, bestSource, bestTarget);
+            }
+        }
+        private void Ai_move()
+        {
+            if (ActivePlayer == CheckerColor.White)
+            {
+                var (score, source, target) = Minimax(this, 3, true, int.MinValue, int.MaxValue);
+                if (source != null && target != null && source.Checker != null && target.Checker == null)
+                {
+                    MoveChecker(source, target);
+                    ActivePlayer = CheckerColor.Red;
+                }
+            }
+        }
+
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
         {

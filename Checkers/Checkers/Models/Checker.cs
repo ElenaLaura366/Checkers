@@ -26,6 +26,17 @@ namespace Checkers.Models
             }
         }
         public CheckerColor Color { get; set; }
+
+        public Checker Clone()
+        {
+            return new Checker
+            {
+                Color = this.Color,
+                IsKing = this.IsKing
+            };
+        }
+
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected virtual void OnPropertyChanged(string propertyName)
         {
